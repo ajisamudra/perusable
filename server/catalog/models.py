@@ -1,6 +1,7 @@
 import uuid
 
 from django.db import models
+from django.contrib.postgres.indexes import GinIndex
 
 
 class Wine(models.Model):
@@ -15,3 +16,22 @@ class Wine(models.Model):
 
     def __str__(self) -> str:
         return f"{self.id}"
+
+    class Meta:
+        indexes = [
+            GinIndex(
+                name="variety_gin_idx",
+                fields=["variety"],
+                opclasses=["gin_trgm_ops"],
+            ),
+            GinIndex(
+                name="winery_gin_idx",
+                fields=["winery"],
+                opclasses=["gin_trgm_ops"],
+            ),
+            GinIndex(
+                name="description_gin_idx",
+                fields=["description"],
+                opclasses=["gin_trgm_ops"],
+            ),
+        ]
