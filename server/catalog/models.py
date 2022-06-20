@@ -11,6 +11,7 @@ class Wine(models.Model):
     price = models.DecimalField(decimal_places=2, max_digits=10, null=True, blank=True)
     variety = models.CharField(max_length=255)
     winery = models.CharField(max_length=255)
+    thumbnail = models.ImageField(upload_to="wines", blank=True)
 
     def __str__(self) -> str:
         return f"{self.id}"
