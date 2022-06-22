@@ -13,6 +13,7 @@ class WineAdmin(admin.ModelAdmin):
         "variety",
         "winery",
         "thumbnail",
+        "search_vector",
     )
     list_display = (
         "id",
