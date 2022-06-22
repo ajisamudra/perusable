@@ -2,6 +2,7 @@ import uuid
 
 from django.db import models
 from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVectorField
 
 
 class Wine(models.Model):
@@ -13,6 +14,7 @@ class Wine(models.Model):
     variety = models.CharField(max_length=255)
     winery = models.CharField(max_length=255)
     thumbnail = models.ImageField(upload_to="wines", blank=True)
+    search_vector = SearchVectorField(null=True, blank=True)
 
     def __str__(self) -> str:
         return f"{self.id}"
@@ -20,18 +22,7 @@ class Wine(models.Model):
     class Meta:
         indexes = [
             GinIndex(
-                name="variety_gin_idx",
-                fields=["variety"],
-                opclasses=["gin_trgm_ops"],
-            ),
-            GinIndex(
-                name="winery_gin_idx",
-                fields=["winery"],
-                opclasses=["gin_trgm_ops"],
-            ),
-            GinIndex(
-                name="description_gin_idx",
-                fields=["description"],
-                opclasses=["gin_trgm_ops"],
-            ),
+                name="search_vector_index",
+                fields=["search_vector"],
+            )
         ]
