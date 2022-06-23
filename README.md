@@ -28,3 +28,27 @@
     ```bash
     python manage.py migrate
     ```
+
+## Feedback
+
+in `part 2 - spelling mistakes`, when adding queryset class `WineSearchWordFilterSet` there's incomplete instruction on adding the class to model `WineSearchWord`
+
+```python
+class WineSearchWordQuerySet(models.query.QuerySet):
+    def search(self, query):
+        return (
+            self.annotate(similarity=TrigramSimilarity("word", query))
+            .filter(similarity__gte=0.3)
+            .order_by("-similarity")
+        )
+
+
+class WineSearchWord(models.Model):
+    word = models.CharField(max_length=255, unique=True)
+
+    objects = WineSearchWordQuerySet.as_manager()  # not written
+
+    def __str__(self) -> str:
+        return self.word
+
+```
