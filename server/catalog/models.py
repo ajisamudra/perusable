@@ -2,7 +2,26 @@ import uuid
 
 from django.db import models
 from django.contrib.postgres.indexes import GinIndex
-from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVectorField
+from django.db.models import F, Q
+
+
+class WineQuerySet(models.query.QuerySet):
+    def search(self, query):
+        search_query = Q(Q(search_vector=SearchQuery(query)))
+
+        return (
+            self.annotate(
+                variety_headline=SearchHeadline(F("variety"), SearchQuery(query)),
+                winery_headline=SearchHeadline(F("winery"), SearchQuery(query)),
+                description_headline=SearchHeadline(
+                    F("description"), SearchQuery(query)
+                ),
+                search_rank=SearchRank(F("search_vector"), SearchQuery(query)),
+            )
+            .filter(search_query)
+            .order_by("-search_rank", "id")
+        )
 
 
 class Wine(models.Model):
@@ -16,6 +35,8 @@ class Wine(models.Model):
     thumbnail = models.ImageField(upload_to="wines", blank=True)
     search_vector = SearchVectorField(null=True, blank=True)
 
+    objects = WineQuerySet.as_manager()
+
     def __str__(self) -> str:
         return f"{self.id}"
 
@@ -26,3 +47,16 @@ class Wine(models.Model):
                 fields=["search_vector"],
             )
         ]
+
+
+class SearchHeadline(models.Func):
+    function = "ts_headline"
+    output_field = models.TextField()
+    template = "%(function)s(%(expressions)s, 'StartSel = <mark>, StopSel = </mark>, HighlightAll=TRUE')"
+
+
+class WineSearchWord(models.Model):
+    word = models.CharField(max_length=255, unique=True)
+
+    def __str__(self) -> str:
+        return self.word
