@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+from elasticsearch_dsl import connections
 from pathlib import Path
 import os
 import sys
@@ -164,3 +165,15 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+
+def get_env_list(key, default=None):
+    env = os.getenv(key)
+    if env:
+        return env.split(",")
+    return default
+
+
+ES_HOSTS = get_env_list("ES_HOSTS", ["http://localhost:9200"])
+
+ES_CONNECTION = connections.create_connection(hosts=ES_HOSTS)
