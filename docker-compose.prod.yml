@@ -40,7 +40,7 @@ services:
       - SQL_PASSWORD=perusable
       - SQL_HOST=perusable-database-prod
       - SQL_PORT=5432
-      - ES_HOSTS=http://perusable-elasticsearch:9200
+      - ES_HOSTS=http://perusable-elasticsearch-prod:9200
     command: [ "bash", "start.prod.sh" ]
     ports:
       - 8000
