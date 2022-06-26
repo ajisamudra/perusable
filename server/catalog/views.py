@@ -29,17 +29,32 @@ class WineSearchWordsView(ListAPIView):
 class ESWinesView(APIView):
     def get(self, request, *args, **kwargs):
         query = self.request.query_params.get("query")
+        country = self.request.query_params.get("country")
+        points = self.request.query_params.get("points")
 
         # build elasticsearch query
         search = Search(index=constants.ES_INDEX)
+        q = {"should": [], "filter": []}
+
+        # build should clause
+        if query:
+            q["should"] = [
+                Match(variety=query),
+                Match(winery=query),
+                Match(description=query),
+            ]
+            q["minimum_should_match"] = 1
+
+        # build filter clause
+        if country:
+            q["filter"].append(Term(country=country))
+        if points:
+            q["filter"].append(Term(points=points))
+
         response = (
             search.query(
                 "bool",
-                should=[
-                    Match(variety=query),
-                    Match(winery=query),
-                    Match(description=query),
-                ],
+                **q,
             )
             .params(size=100)
             .execute()
