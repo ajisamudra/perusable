@@ -1,11 +1,13 @@
 import json
 import pathlib
+from unittest.mock import patch
 import uuid
 
 from django.conf import settings
 from elasticsearch_dsl import connections
 from rest_framework.test import APIClient, APITestCase
 
+from catalog.constants import ES_MAPPING
 from catalog.models import Wine, WineSearchWord
 from catalog.serializers import WineSerializer
 from django.contrib.postgres.search import SearchVector
@@ -158,22 +160,7 @@ class ESViewTests(APITestCase):
                     "number_of_shards": 1,
                     "number_of_replicas": 0,
                 },
-                "mappings": {
-                    "properties": {
-                        "variety": {
-                            "type": "text",
-                            "analyzer": "english",
-                        },
-                        "winery": {
-                            "type": "text",
-                            "analyzer": "english",
-                        },
-                        "description": {
-                            "type": "text",
-                            "analyzer": "english",
-                        },
-                    }
-                },
+                "mappings": ES_MAPPING,
             },
         )
 
@@ -189,7 +176,10 @@ class ESViewTests(APITestCase):
                     index=self.index,
                     id=fields["id"],
                     body={
+                        "country": fields["country"],
                         "description": fields["description"],
+                        "points": fields["points"],
+                        "price": fields["price"],
                         "variety": fields["variety"],
                         "winery": fields["winery"],
                     },
@@ -197,7 +187,9 @@ class ESViewTests(APITestCase):
                 )
 
     def test_query_matches_variety(self):
-        response = self.client.get("/api/v1/catalog/es-wines/?query=Cabernet")
+        with patch("catalog.views.constants") as mock_constants:
+            mock_constants.ES_INDEX = self.index
+            response = self.client.get("/api/v1/catalog/es-wines/?query=Cabernet")
         self.assertEquals(1, len(response.data))
         self.assertEquals(
             "58ba903f-85ff-45c2-9bac-6d0732544841", response.data[0]["id"]

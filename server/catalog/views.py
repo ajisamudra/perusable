@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 
 from rest_framework.generics import ListAPIView
 
+from . import constants
 from .models import Wine, WineSearchWord
 from .serializers import WineSerializer, WineSearchWordSerializer
 from .filters import WineFilterSet, WineSearchWordFilterSet
@@ -30,7 +31,7 @@ class ESWinesView(APIView):
         query = self.request.query_params.get("query")
 
         # build elasticsearch query
-        search = Search()
+        search = Search(index=constants.ES_INDEX)
         response = (
             search.query(
                 "bool",
