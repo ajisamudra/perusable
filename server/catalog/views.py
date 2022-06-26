@@ -1,3 +1,8 @@
+from elasticsearch_dsl import Search
+from elasticsearch_dsl.query import Match, Term
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from rest_framework.generics import ListAPIView
 
 from .models import Wine, WineSearchWord
@@ -18,3 +23,41 @@ class WineSearchWordsView(ListAPIView):
 
     def filter_queryset(self, request):
         return super().filter_queryset(request)[:100]
+
+
+class ESWinesView(APIView):
+    def get(self, request, *args, **kwargs):
+        query = self.request.query_params.get("query")
+
+        # build elasticsearch query
+        search = Search()
+        response = (
+            search.query(
+                "bool",
+                should=[
+                    Match(variety=query),
+                    Match(winery=query),
+                    Match(description=query),
+                ],
+            )
+            .params(size=100)
+            .execute()
+        )
+
+        if response.hits.total.value > 0:
+            return Response(
+                data=[
+                    {
+                        "id": hit.meta.id,
+                        "country": hit.country,
+                        "description": hit.description,
+                        "points": hit.points,
+                        "price": hit.price,
+                        "variety": hit.variety,
+                        "winery": hit.winery,
+                    }
+                    for hit in response
+                ]
+            )
+        else:
+            return Response(data=[])
