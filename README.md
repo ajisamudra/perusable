@@ -1,54 +1,24 @@
-# Readme
+# Full-text Search in Django with Postgres and Elasticsearch
 
-## Create GIN index in postgres
+Course link in [Testdriven.io](https://testdriven.io/courses/django-full-text-search/)
 
-[reference](https://stackoverflow.com/questions/65191492/how-to-install-django-pg-trgm-by-makemigrations)
+## System Design
 
-1. add 'django.contrib.postgres' in your INSTALLED_APPS
+The system that's built over this course.
 
-2. add a customer migration file in the app's migration folder. (The migration files are indexed, It's better to follow that index. e.g. 0044_customer_migrations.py)
+![system-design](assets/system-design.png)
 
-3. add TrigramExtension in your migration file
+## Learnings
 
-    ```python
-    from django.contrib.postgres.operations import TrigramExtension
+The course splits the system into of 4 parts.
 
-    class Migration(migrations.Migration):
-        dependencies = [
-            ('myapp', '0043_latest_migrations'),
-        ]
+1. Server (Django)
+2. Full-text search in Database (Postgres)
+3. Client (React)
+4. Elasticsearch
 
-        operations = [
-            TrigramExtension(),
-        ]
-    ```
+The course explains one component at a time with increasing complexity. In the server side, it starts from (1) creating simple API then (2) connecting it to Postgres database then (3) using full-text search Postgres to generate relevant documents to user query.
 
-4. run migrate
+The same for client side, it starts from (1) creating simple header then (2) adding `form` and `result list` then (3) adding word suggestion for query.
 
-    ```bash
-    python manage.py migrate
-    ```
-
-## Feedback
-
-in `part 2 - spelling mistakes`, when adding queryset class `WineSearchWordFilterSet` there's incomplete instruction on adding the class to model `WineSearchWord`
-
-```python
-class WineSearchWordQuerySet(models.query.QuerySet):
-    def search(self, query):
-        return (
-            self.annotate(similarity=TrigramSimilarity("word", query))
-            .filter(similarity__gte=0.3)
-            .order_by("-similarity")
-        )
-
-
-class WineSearchWord(models.Model):
-    word = models.CharField(max_length=255, unique=True)
-
-    objects = WineSearchWordQuerySet.as_manager()  # not written
-
-    def __str__(self) -> str:
-        return self.word
-
-```
+The most interesting part for me is the Elasticsearch. It offers faster way of searching compared to Postgres with much more functionality. Even though the course only introduce the `query`, `filter` and `suggest`, it gives me starting point to learn more about Elasticsearch.
